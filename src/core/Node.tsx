@@ -1,4 +1,5 @@
 import { useFrame } from "@react-three/fiber";
+import { Text, Billboard } from "@react-three/drei";
 import { useRef, useState } from "react";
 import * as THREE from "three";
 import { useArchonStore } from "./store";
@@ -12,7 +13,7 @@ export function Node({
 }) {
   const ref = useRef<THREE.Mesh>(null!);
   const [hovered, setHovered] = useState(false);
-  const { selectedNode, setSelectedNode } = useArchonStore();
+  const { selectedNode, setSelectedNode, showLabels } = useArchonStore();
 
   const isSelected = selectedNode === id;
 
@@ -26,19 +27,35 @@ export function Node({
   });
 
   return (
-    <mesh
-      ref={ref}
-      position={position}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-      onClick={() => setSelectedNode(id)}
-    >
-      <sphereGeometry args={[0.4, 32, 32]} />
-      <meshStandardMaterial
-        emissive={isSelected ? "#ff3c00" : "#ff7a00"}
-        emissiveIntensity={2}
-        color={hovered ? "#ffffff" : "#ffae00"}
-      />
-    </mesh>
+    <group position={position}>
+      <mesh
+        ref={ref}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        onClick={() => setSelectedNode(id)}
+      >
+        <sphereGeometry args={[0.4, 32, 32]} />
+        <meshStandardMaterial
+          emissive={isSelected ? "#ff3c00" : "#ff7a00"}
+          emissiveIntensity={2}
+          color={hovered ? "#ffffff" : "#ffae00"}
+        />
+      </mesh>
+
+      {showLabels && (
+        <Billboard position={[0, 0.9, 0]}>
+            <Text
+            fontSize={0.3}
+            color="#ffae00"
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.01}
+            outlineColor="#ff7a00"
+            >
+            {id}
+            </Text>
+        </Billboard>
+        )}
+    </group>
   );
 }
