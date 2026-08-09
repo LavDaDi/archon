@@ -2,41 +2,56 @@ import { OrbitControls, Stars } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { Node } from "./Node";
 import { Edge } from "./Edge";
+import type { HoloGraph } from "./types";
 
-export function Scene() {
-  const nodes = [
-    { id: "A", position: [0, 0, 0] },
-    { id: "B", position: [4, 2, 0] },
-    { id: "C", position: [-3, -2, 1] },
-    { id: "D", position: [2, -3, -2] },
-  ];
-
-  const edges = [
-    { from: nodes[0], to: nodes[1] },
-    { from: nodes[0], to: nodes[2] },
-    { from: nodes[1], to: nodes[3] },
-  ];
-
+export function Scene({ graph }: { graph: HoloGraph }) {
   return (
     <>
+      {/* Background */}
       <color attach="background" args={["#050505"]} />
+
+      {/* Lighting */}
       <ambientLight intensity={0.2} />
       <pointLight position={[10, 10, 10]} intensity={1} />
 
-      {nodes.map((node) => (
-        <Node
+      {/* Nodes */}
+      {graph.nodes.map((node) => {
+        if (!node.position) return null;
+
+        return (
+          <Node
             key={node.id}
             id={node.id}
-            position={node.position as [number, number, number]}
-        />
-      ))}
+            position={node.position}
+          />
+        );
+      })}
 
-      {edges.map((edge, i) => (
-        <Edge key={i} from={edge.from.position} to={edge.to.position} />
-      ))}
+      {/* Edges */}
+      {graph.edges.map((edge, index) => {
+        const sourceNode = graph.nodes.find(
+          (n) => n.id === edge.source
+        );
+        const targetNode = graph.nodes.find(
+          (n) => n.id === edge.target
+        );
 
+        if (!sourceNode?.position || !targetNode?.position)
+          return null;
+
+        return (
+          <Edge
+            key={index}
+            from={sourceNode.position}
+            to={targetNode.position}
+          />
+        );
+      })}
+
+      {/* Controls */}
       <OrbitControls enableDamping />
 
+      {/* Post Processing */}
       <EffectComposer>
         <Bloom
           intensity={1.5}
@@ -45,6 +60,7 @@ export function Scene() {
         />
       </EffectComposer>
 
+      {/* Space ambience */}
       <Stars radius={100} depth={50} count={500} factor={2} />
     </>
   );

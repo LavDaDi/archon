@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Scene } from "./core/Scene";
 import { useArchonStore } from "./core/store";
+import { demoGraph } from "./core/graphData";
 
 export default function App() {
   const { selectedNode, toggleLabels, showLabels } = useArchonStore();
@@ -15,12 +16,12 @@ export default function App() {
         overflow: "hidden",
       }}
     >
-      {/* 3D Canvas */}
+      {/* 3D Scene */}
       <Canvas camera={{ position: [0, 0, 15], fov: 60 }}>
-        <Scene />
+        <Scene graph={demoGraph} />
       </Canvas>
 
-      {/* Toggle Labels Button */}
+      {/* Toggle Labels */}
       <button
         onClick={toggleLabels}
         style={{
@@ -50,12 +51,16 @@ export default function App() {
             padding: "15px",
             color: "#ffae00",
             fontFamily: "monospace",
-            minWidth: "200px",
+            minWidth: "220px",
           }}
         >
           <h3 style={{ marginTop: 0 }}>A.R.C.H.O.N.</h3>
-          <p><strong>Node ID:</strong> {selectedNode}</p>
-          <p><strong>Status:</strong> Active</p>
+          <p>
+            <strong>Node ID:</strong> {selectedNode}
+          </p>
+          <p>
+            <strong>Status:</strong> Active
+          </p>
         </div>
       )}
     </div>
