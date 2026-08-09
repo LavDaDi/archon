@@ -3,11 +3,24 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { Node } from "./Node";
 import { Edge } from "./Edge";
 import { useForceSimulation } from "./useForceSimulation";
+import { useArchonStore } from "./store";
 import type { HoloGraph } from "./types";
 
 export function Scene({ graph }: { graph: HoloGraph }) {
-  // Force simulation
   const positions = useForceSimulation(graph);
+  const { selectedNode } = useArchonStore();
+
+  // ✅ adjacency map (кто с кем связан)
+  const adjacency = new Map<string, Set<string>>();
+
+  graph.nodes.forEach((node) => {
+    adjacency.set(node.id, new Set());
+  });
+
+  graph.edges.forEach((edge) => {
+    adjacency.get(edge.source)?.add(edge.target);
+    adjacency.get(edge.target)?.add(edge.source);
+  });
 
   return (
     <>
@@ -23,11 +36,17 @@ export function Scene({ graph }: { graph: HoloGraph }) {
         const position = positions[node.id];
         if (!position) return null;
 
+        const isConnected =
+          selectedNode &&
+          (node.id === selectedNode ||
+            adjacency.get(selectedNode)?.has(node.id));
+
         return (
           <Node
             key={node.id}
             id={node.id}
             position={position}
+            dimmed={!!selectedNode && !isConnected}
           />
         );
       })}
@@ -39,17 +58,31 @@ export function Scene({ graph }: { graph: HoloGraph }) {
 
         if (!sourcePos || !targetPos) return null;
 
+        const isConnected =
+          selectedNode &&
+          (edge.source === selectedNode ||
+            edge.target === selectedNode);
+
         return (
           <Edge
             key={index}
             from={sourcePos}
             to={targetPos}
+            dimmed={!!selectedNode && !isConnected}
           />
         );
       })}
 
       {/* Controls */}
-      <OrbitControls enableDamping />
+      <OrbitControls
+        enableDamping
+        dampingFactor={0.05}
+        rotateSpeed={0.6}
+        zoomSpeed={0.8}
+        panSpeed={0.8}
+        screenSpacePanning
+        enablePan
+      />
 
       {/* Post Processing */}
       <EffectComposer>
