@@ -2,9 +2,13 @@ import { OrbitControls, Stars } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { Node } from "./Node";
 import { Edge } from "./Edge";
+import { useForceSimulation } from "./useForceSimulation";
 import type { HoloGraph } from "./types";
 
 export function Scene({ graph }: { graph: HoloGraph }) {
+  // Force simulation
+  const positions = useForceSimulation(graph);
+
   return (
     <>
       {/* Background */}
@@ -16,34 +20,30 @@ export function Scene({ graph }: { graph: HoloGraph }) {
 
       {/* Nodes */}
       {graph.nodes.map((node) => {
-        if (!node.position) return null;
+        const position = positions[node.id];
+        if (!position) return null;
 
         return (
           <Node
             key={node.id}
             id={node.id}
-            position={node.position}
+            position={position}
           />
         );
       })}
 
       {/* Edges */}
       {graph.edges.map((edge, index) => {
-        const sourceNode = graph.nodes.find(
-          (n) => n.id === edge.source
-        );
-        const targetNode = graph.nodes.find(
-          (n) => n.id === edge.target
-        );
+        const sourcePos = positions[edge.source];
+        const targetPos = positions[edge.target];
 
-        if (!sourceNode?.position || !targetNode?.position)
-          return null;
+        if (!sourcePos || !targetPos) return null;
 
         return (
           <Edge
             key={index}
-            from={sourceNode.position}
-            to={targetNode.position}
+            from={sourcePos}
+            to={targetPos}
           />
         );
       })}
