@@ -2,15 +2,43 @@ import { OrbitControls, Stars } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { Node } from "./Node";
 import { Edge } from "./Edge";
-import { useForceSimulation } from "./useForceSimulation";
+import { useForceSimulation2D } from "./useForceSimulation2D";
+import { useForceSimulation3D } from "./useForceSimulation3D";
 import { useArchonStore } from "./store";
+import { useRef, useEffect } from "react";
 import type { HoloGraph } from "./types";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 export function Scene({ graph }: { graph: HoloGraph }) {
-  const positions = useForceSimulation(graph);
-  const { selectedNode } = useArchonStore();
+  const { selectedNode, visualMode } = useArchonStore();
 
-  // ✅ adjacency map (кто с кем связан)
+  const { positions, startDrag, drag, endDrag } =
+    visualMode === "3D"
+      ? useForceSimulation3D(graph)
+      : useForceSimulation2D(graph);
+
+  const controlsRef = useRef<OrbitControlsImpl>(null!);
+
+  useEffect(() => {
+    console.log("=== A.R.C.H.O.N. DIAGNOSTIC ===");
+    console.log("Visual Mode:", visualMode);
+    console.log("Number of nodes:", Object.keys(positions).length);
+
+    if (Object.keys(positions).length > 0) {
+      const firstNodeKey = Object.keys(positions)[0];
+      const firstPos = positions[firstNodeKey];
+      console.log(
+        `First node (${firstNodeKey}):`,
+        firstPos,
+        `Z: ${firstPos[2]}`
+      );
+    }
+  }, [positions, visualMode]);
+
+  if (Object.keys(positions).length === 0) {
+    return null;
+  }
+
   const adjacency = new Map<string, Set<string>>();
 
   graph.nodes.forEach((node) => {
@@ -24,14 +52,24 @@ export function Scene({ graph }: { graph: HoloGraph }) {
 
   return (
     <>
-      {/* Background */}
       <color attach="background" args={["#050505"]} />
 
-      {/* Lighting */}
-      <ambientLight intensity={0.2} />
+      {/* ✅ FOG для 3D эффекта */}
+      {visualMode === "3D" && (
+        <fog attach="fog" args={["#050505", 20, 80]} />
+      )}
+
+      <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 10]} intensity={1} />
 
-      {/* Nodes */}
+      {/* ✅ Дополнительный свет для 3D */}
+      {visualMode === "3D" && (
+        <>
+          <pointLight position={[-10, -10, 10]} intensity={0.6} />
+          <pointLight position={[0, 20, 0]} intensity={0.5} />
+        </>
+      )}
+
       {graph.nodes.map((node) => {
         const position = positions[node.id];
         if (!position) return null;
@@ -47,11 +85,23 @@ export function Scene({ graph }: { graph: HoloGraph }) {
             id={node.id}
             position={position}
             dimmed={!!selectedNode && !isConnected}
+            onDragStart={startDrag}
+            onDrag={drag}
+            onDragEnd={endDrag}
+            onDragInitiate={() => {
+              if (controlsRef.current) {
+                controlsRef.current.enabled = false;
+              }
+            }}
+            onDragFinish={() => {
+              if (controlsRef.current) {
+                controlsRef.current.enabled = true;
+              }
+            }}
           />
         );
       })}
 
-      {/* Edges */}
       {graph.edges.map((edge, index) => {
         const sourcePos = positions[edge.source];
         const targetPos = positions[edge.target];
@@ -73,8 +123,8 @@ export function Scene({ graph }: { graph: HoloGraph }) {
         );
       })}
 
-      {/* Controls */}
       <OrbitControls
+        ref={controlsRef}
         enableDamping
         dampingFactor={0.05}
         rotateSpeed={0.6}
@@ -84,7 +134,6 @@ export function Scene({ graph }: { graph: HoloGraph }) {
         enablePan
       />
 
-      {/* Post Processing */}
       <EffectComposer>
         <Bloom
           intensity={1.5}
@@ -93,7 +142,6 @@ export function Scene({ graph }: { graph: HoloGraph }) {
         />
       </EffectComposer>
 
-      {/* Space ambience */}
       <Stars radius={100} depth={50} count={500} factor={2} />
     </>
   );

@@ -8,14 +8,25 @@ export function Node({
   id,
   position,
   dimmed,
+  onDragStart,
+  onDrag,
+  onDragEnd,
+  onDragInitiate,
+  onDragFinish,
 }: {
   id: string;
   position: [number, number, number];
   dimmed?: boolean;
+  onDragStart?: (id: string) => void;
+  onDrag?: (id: string, x: number, y: number) => void;
+  onDragEnd?: (id: string) => void;
+  onDragInitiate?: () => void;
+  onDragFinish?: () => void;
 }) {
   const ref = useRef<THREE.Mesh>(null!);
   const [hovered, setHovered] = useState(false);
-  const { selectedNode, setSelectedNode, showLabels } = useArchonStore();
+  const { selectedNode, setSelectedNode, showLabels } =
+    useArchonStore();
 
   const isSelected = selectedNode === id;
 
@@ -32,9 +43,32 @@ export function Node({
     <group position={position}>
       <mesh
         ref={ref}
-        onPointerOver={() => setHovered(true)}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
         onPointerOut={() => setHovered(false)}
-        onClick={() => setSelectedNode(id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedNode(id);
+        }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          e.target.setPointerCapture(e.pointerId);
+          onDragInitiate?.();
+          onDragStart?.(id);
+        }}
+        onPointerMove={(e) => {
+          if (e.buttons === 1) {
+            onDrag?.(id, e.point.x, e.point.y);
+          }
+        }}
+        onPointerUp={(e) => {
+          e.stopPropagation();
+          e.target.releasePointerCapture(e.pointerId);
+          onDragFinish?.();
+          onDragEnd?.(id);
+        }}
       >
         <sphereGeometry args={[0.4, 32, 32]} />
         <meshStandardMaterial
