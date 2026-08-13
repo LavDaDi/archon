@@ -1,0 +1,196 @@
+{
+  "nodes": [
+    {
+      "id": "App.tsx",
+      "label": "App.tsx",
+      "type": "file"
+    },
+    {
+      "id": "main.tsx",
+      "label": "main.tsx",
+      "type": "file"
+    },
+    {
+      "id": "testAnalyzer.ts",
+      "label": "testAnalyzer.ts",
+      "type": "file"
+    },
+    {
+      "id": "astParser.ts",
+      "label": "astParser.ts",
+      "type": "file"
+    },
+    {
+      "id": "fileScanner.ts",
+      "label": "fileScanner.ts",
+      "type": "file"
+    },
+    {
+      "id": "graphBuilder.ts",
+      "label": "graphBuilder.ts",
+      "type": "file"
+    },
+    {
+      "id": "index.ts",
+      "label": "index.ts",
+      "type": "file"
+    },
+    {
+      "id": "Edge.tsx",
+      "label": "Edge.tsx",
+      "type": "file"
+    },
+    {
+      "id": "graphData.ts",
+      "label": "graphData.ts",
+      "type": "file"
+    },
+    {
+      "id": "Node.tsx",
+      "label": "Node.tsx",
+      "type": "file"
+    },
+    {
+      "id": "realGraphData.ts",
+      "label": "realGraphData.ts",
+      "type": "file"
+    },
+    {
+      "id": "Scene.tsx",
+      "label": "Scene.tsx",
+      "type": "file"
+    },
+    {
+      "id": "store.ts",
+      "label": "store.ts",
+      "type": "file"
+    },
+    {
+      "id": "types.ts",
+      "label": "types.ts",
+      "type": "file"
+    },
+    {
+      "id": "useForceSimulation2D.ts",
+      "label": "useForceSimulation2D.ts",
+      "type": "file"
+    },
+    {
+      "id": "useForceSimulation3D.ts",
+      "label": "useForceSimulation3D.ts",
+      "type": "file"
+    }
+  ],
+  "edges": [
+    {
+      "source": "App.tsx",
+      "target": "Scene.tsx",
+      "type": "import"
+    },
+    {
+      "source": "App.tsx",
+      "target": "store.ts",
+      "type": "import"
+    },
+    {
+      "source": "App.tsx",
+      "target": "graphData.ts",
+      "type": "import"
+    },
+    {
+      "source": "App.tsx",
+      "target": "realGraphData.ts",
+      "type": "import"
+    },
+    {
+      "source": "main.tsx",
+      "target": "App.tsx",
+      "type": "import"
+    },
+    {
+      "source": "testAnalyzer.ts",
+      "target": "astParser.ts",
+      "type": "import"
+    },
+    {
+      "source": "graphBuilder.ts",
+      "target": "fileScanner.ts",
+      "type": "import"
+    },
+    {
+      "source": "graphBuilder.ts",
+      "target": "astParser.ts",
+      "type": "import"
+    },
+    {
+      "source": "index.ts",
+      "target": "fileScanner.ts",
+      "type": "import"
+    },
+    {
+      "source": "index.ts",
+      "target": "astParser.ts",
+      "type": "import"
+    },
+    {
+      "source": "index.ts",
+      "target": "graphBuilder.ts",
+      "type": "import"
+    },
+    {
+      "source": "graphData.ts",
+      "target": "types.ts",
+      "type": "import"
+    },
+    {
+      "source": "Node.tsx",
+      "target": "store.ts",
+      "type": "import"
+    },
+    {
+      "source": "realGraphData.ts",
+      "target": "types.ts",
+      "type": "import"
+    },
+    {
+      "source": "Scene.tsx",
+      "target": "Node.tsx",
+      "type": "import"
+    },
+    {
+      "source": "Scene.tsx",
+      "target": "Edge.tsx",
+      "type": "import"
+    },
+    {
+      "source": "Scene.tsx",
+      "target": "useForceSimulation2D.ts",
+      "type": "import"
+    },
+    {
+      "source": "Scene.tsx",
+      "target": "useForceSimulation3D.ts",
+      "type": "import"
+    },
+    {
+      "source": "Scene.tsx",
+      "target": "store.ts",
+      "type": "import"
+    },
+    {
+      "source": "Scene.tsx",
+      "target": "types.ts",
+      "type": "import"
+    },
+    {
+      "source": "useForceSimulation2D.ts",
+      "target": "types.ts",
+      "type": "import"
+    },
+    {
+      "source": "useForceSimulation3D.ts",
+      "target": "types.ts",
+      "type": "import"
+    }
+  ]
+}

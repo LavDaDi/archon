@@ -51,7 +51,7 @@ export function useForceSimulation2D(graph: HoloGraph) {
     nodesRef.current = nodes;
 
     const simulation = forceSimulation(nodes)
-      .force("charge", forceManyBody().strength(-400))
+      .force("charge", forceManyBody().strength(-100)) // ✅ слабее отталкивание
       .force(
         "link",
         forceLink<ForceNode, ForceLink>(links)
@@ -61,10 +61,10 @@ export function useForceSimulation2D(graph: HoloGraph) {
       )
       .force("center", forceCenter(0, 0))
       .force("collision", forceCollide().radius(1.2))
-      .force("x", forceX(0).strength(0.05))
-      .force("y", forceY(0).strength(0.05))
+      .force("x", forceX(0).strength(0.1)) // ✅ сильнее притяжение к центру
+      .force("y", forceY(0).strength(0.1))
       .alphaDecay(0.02)
-      .velocityDecay(0.3)
+      .velocityDecay(0.5) // ✅ быстрее затухание
       .alpha(1)
       .restart();
 
@@ -72,7 +72,11 @@ export function useForceSimulation2D(graph: HoloGraph) {
       const newPositions: Record<string, [number, number, number]> = {};
 
       nodes.forEach((node) => {
-        newPositions[node.id] = [node.x ?? 0, node.y ?? 0, 0];
+        // ✅ ограничиваем координаты
+        const x = Math.max(-50, Math.min(50, node.x ?? 0));
+        const y = Math.max(-50, Math.min(50, node.y ?? 0));
+
+        newPositions[node.id] = [x, y, 0];
       });
 
       setPositions(newPositions);
@@ -89,13 +93,11 @@ export function useForceSimulation2D(graph: HoloGraph) {
     const node = nodesRef.current.find((n) => n.id === id);
     if (!node || !simulationRef.current) return;
 
-    // ✅ увеличиваем alpha для плавного движения
     simulationRef.current.alphaTarget(0.5).restart();
-    
+
     node.fx = node.x;
     node.fy = node.y;
-    
-    // ✅ отключаем силы для драга
+
     node.vx = 0;
     node.vy = 0;
   };
@@ -104,17 +106,14 @@ export function useForceSimulation2D(graph: HoloGraph) {
     const node = nodesRef.current.find((n) => n.id === id);
     if (!node) return;
 
-    node.fx = x;
-    node.fy = y;
+    node.fx = Math.max(-50, Math.min(50, x));
+    node.fy = Math.max(-50, Math.min(50, y));
   };
 
   const endDrag = (id: string) => {
     const node = nodesRef.current.find((n) => n.id === id);
     if (!node || !simulationRef.current) return;
 
-    // ✅ КЛЮЧЕВОЙ МОМЕНТ — оставляем узел закреплённым
-    // fx и fy остаются установленными
-    // узел больше НЕ двигается физикой
     simulationRef.current.alphaTarget(0);
   };
 

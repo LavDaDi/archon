@@ -6,11 +6,13 @@ import { useForceSimulation2D } from "./useForceSimulation2D";
 import { useForceSimulation3D } from "./useForceSimulation3D";
 import { useArchonStore } from "./store";
 import { useRef, useEffect } from "react";
+import { useThree } from "@react-three/fiber";
 import type { HoloGraph } from "./types";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 export function Scene({ graph }: { graph: HoloGraph }) {
   const { selectedNode, visualMode } = useArchonStore();
+  const { camera } = useThree();
 
   const { positions, startDrag, drag, endDrag } =
     visualMode === "3D"
@@ -19,21 +21,71 @@ export function Scene({ graph }: { graph: HoloGraph }) {
 
   const controlsRef = useRef<OrbitControlsImpl>(null!);
 
+  // ✅ ДИНАМИЧЕСКАЯ ПОДСТРОЙКА КАМЕРЫ
+  useEffect(() => {
+    if (Object.keys(positions).length === 0) return;
+
+    const posArray = Object.values(positions);
+    
+    // Вычисляем границы
+    const xs = posArray.map((p) => p[0]);
+    const ys = posArray.map((p) => p[1]);
+    const zs = posArray.map((p) => p[2]);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const minZ = Math.min(...zs);
+    const maxZ = Math.max(...zs);
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const centerZ = (minZ + maxZ) / 2;
+
+    const sizeX = maxX - minX;
+    const sizeY = maxY - minY;
+    const sizeZ = maxZ - minZ;
+
+    const maxSize = Math.max(sizeX, sizeY, sizeZ);
+
+    console.log("📐 Graph Bounds:", {
+      X: [minX, maxX],
+      Y: [minY, maxY],
+      Z: [minZ, maxZ],
+      center: [centerX, centerY, centerZ],
+      maxSize,
+    });
+
+    // ✅ Подстраиваем камеру
+    const distance = maxSize * 2;
+
+    if (visualMode === "3D") {
+      camera.position.set(
+        centerX + distance * 0.7,
+        centerY + distance * 0.7,
+        centerZ + distance * 0.7
+      );
+    } else {
+      camera.position.set(centerX, centerY, distance);
+    }
+
+    camera.lookAt(centerX, centerY, centerZ);
+
+    // ✅ Обновляем OrbitControls
+    if (controlsRef.current) {
+      controlsRef.current.target.set(centerX, centerY, centerZ);
+      controlsRef.current.update();
+    }
+  }, [positions, visualMode, camera]);
+
   useEffect(() => {
     console.log("=== A.R.C.H.O.N. DIAGNOSTIC ===");
     console.log("Visual Mode:", visualMode);
-    console.log("Number of nodes:", Object.keys(positions).length);
-
-    if (Object.keys(positions).length > 0) {
-      const firstNodeKey = Object.keys(positions)[0];
-      const firstPos = positions[firstNodeKey];
-      console.log(
-        `First node (${firstNodeKey}):`,
-        firstPos,
-        `Z: ${firstPos[2]}`
-      );
-    }
-  }, [positions, visualMode]);
+    console.log("Nodes:", graph.nodes.length);
+    console.log("Edges:", graph.edges.length);
+    console.log("Positions loaded:", Object.keys(positions).length);
+  }, [visualMode, graph.nodes.length, graph.edges.length, positions]);
 
   if (Object.keys(positions).length === 0) {
     return null;
@@ -54,24 +106,23 @@ export function Scene({ graph }: { graph: HoloGraph }) {
     <>
       <color attach="background" args={["#050505"]} />
 
-      {/* ✅ FOG для 3D эффекта */}
       {visualMode === "3D" && (
-        <fog attach="fog" args={["#050505", 20, 80]} />
+        <fog attach="fog" args={["#050505", 20, 200]} />
       )}
 
       <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 10]} intensity={1} />
 
-      {/* ✅ Дополнительный свет для 3D */}
       {visualMode === "3D" && (
         <>
-          <pointLight position={[-10, -10, 10]} intensity={0.6} />
-          <pointLight position={[0, 20, 0]} intensity={0.5} />
+          <pointLight position={[-10, -10, 10]} intensity={0.6} color="#ff7a00" />
+          <pointLight position={[0, 20, 0]} intensity={0.5} color="#ff7a00" />
         </>
       )}
 
       {graph.nodes.map((node) => {
         const position = positions[node.id];
+
         if (!position) return null;
 
         const isConnected =
@@ -132,6 +183,7 @@ export function Scene({ graph }: { graph: HoloGraph }) {
         panSpeed={0.8}
         screenSpacePanning
         enablePan
+        autoRotate={false}
       />
 
       <EffectComposer>
@@ -142,7 +194,7 @@ export function Scene({ graph }: { graph: HoloGraph }) {
         />
       </EffectComposer>
 
-      <Stars radius={100} depth={50} count={500} factor={2} />
+      <Stars radius={200} depth={100} count={800} factor={2} />
     </>
   );
 }

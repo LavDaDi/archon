@@ -49,7 +49,7 @@ export function useForceSimulation3D(graph: HoloGraph) {
     nodesRef.current = nodes;
 
     const simulation = forceSimulation(nodes)
-      .force("charge", forceManyBody().strength(-400))
+      .force("charge", forceManyBody().strength(-100)) // ✅ слабее
       .force(
         "link",
         forceLink<ForceNode, ForceLink>(links)
@@ -60,7 +60,7 @@ export function useForceSimulation3D(graph: HoloGraph) {
       .force("center", forceCenter(0, 0))
       .force("collision", forceCollide().radius(1.2))
       .alphaDecay(0.02)
-      .velocityDecay(0.3)
+      .velocityDecay(0.5) // ✅ быстрее затухание
       .alpha(1)
       .restart();
 
@@ -71,7 +71,11 @@ export function useForceSimulation3D(graph: HoloGraph) {
         const nodeIndex = graph.nodes.findIndex((n) => n.id === node.id);
         const zLayer = (nodeIndex / graph.nodes.length) * 15 - 7.5;
 
-        newPositions[node.id] = [node.x ?? 0, node.y ?? 0, zLayer];
+        // ✅ ограничиваем X, Y координаты
+        const x = Math.max(-50, Math.min(50, node.x ?? 0));
+        const y = Math.max(-50, Math.min(50, node.y ?? 0));
+
+        newPositions[node.id] = [x, y, zLayer];
       });
 
       setPositions(newPositions);
@@ -89,10 +93,10 @@ export function useForceSimulation3D(graph: HoloGraph) {
     if (!node || !simulationRef.current) return;
 
     simulationRef.current.alphaTarget(0.5).restart();
-    
+
     node.fx = node.x;
     node.fy = node.y;
-    
+
     node.vx = 0;
     node.vy = 0;
   };
@@ -101,15 +105,14 @@ export function useForceSimulation3D(graph: HoloGraph) {
     const node = nodesRef.current.find((n) => n.id === id);
     if (!node) return;
 
-    node.fx = x;
-    node.fy = y;
+    node.fx = Math.max(-50, Math.min(50, x));
+    node.fy = Math.max(-50, Math.min(50, y));
   };
 
   const endDrag = (id: string) => {
     const node = nodesRef.current.find((n) => n.id === id);
     if (!node || !simulationRef.current) return;
 
-    // ✅ КЛЮЧЕВОЙ МОМЕНТ — оставляем узел закреплённым
     simulationRef.current.alphaTarget(0);
   };
 
